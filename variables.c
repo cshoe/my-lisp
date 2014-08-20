@@ -33,7 +33,6 @@ void add_history(char* unused) {}
         return err; \
     }
 
-
 /* Forward type declerations */
 struct lval;
 struct lenv;
@@ -319,7 +318,6 @@ lval* lval_join(lval* x, lval* y) {
 }
 
 lval* lval_eval(lenv* e, lval* v);
-lval* builtin(lval* a, char* op);
 
 lval* lval_eval_sexpr(lenv* e, lval* v) {
     /* Evaluate Children */
