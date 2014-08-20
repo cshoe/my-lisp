@@ -94,7 +94,6 @@ lval* lval_num(long x) {
     return v;
 }
 
-
 lval* lval_err(char* fmt, ...) {
     lval* v = malloc(sizeof(lval));
     v->type = LVAL_ERR;
@@ -113,7 +112,6 @@ lval* lval_err(char* fmt, ...) {
     return v;
 }
 
-
 lval* lval_sym(char* s) {
     lval* v = malloc(sizeof(lval));
     v->type = LVAL_SYM;
@@ -121,7 +119,6 @@ lval* lval_sym(char* s) {
     strcpy(v->sym, s);
     return v;
 }
-
 
 lval* lval_sexpr(void) {
     lval* v = malloc(sizeof(lval));
@@ -168,7 +165,6 @@ void lval_del(lval* v) {
     free(v);
 }
 
-
 lval* lval_add(lval* v, lval* x) {
     v->count++;
     v->cell = realloc(v->cell, sizeof(lval*) * v->count);
@@ -176,13 +172,11 @@ lval* lval_add(lval* v, lval* x) {
     return v;
 }
 
-
 lval* lval_read_num(mpc_ast_t* t) {
     errno = 0;
     long x = strtol(t->contents, NULL, 10);
     return errno != ERANGE ? lval_num(x) : lval_err("Invalid number.");
 }
-
 
 lval* lval_read(mpc_ast_t* t) {
     /* If Symbol or Number, convert and return. */
@@ -222,7 +216,6 @@ void lval_expr_print(lval* v, char open, char close) {
     putchar(close);
 }
 
-
 /* Print an lval */
 void lval_print(lval* v) {
     switch(v->type) {
@@ -249,7 +242,6 @@ void lval_print(lval* v) {
             printf("<function>");
     }
 }
-
 
 /* Print an lval followed by a newline */
 void lval_println(lval* v) {
@@ -280,7 +272,6 @@ lval* lval_take(lval* v, int index) {
 }
 
 lval* lval_copy(lval* v) {
-
     lval* x = malloc(sizeof(lval));
     x->type = v->type;
 
@@ -314,7 +305,6 @@ lval* lval_copy(lval* v) {
     }
 
     return x;
-
 }
 
 lval* lval_join(lval* x, lval* y) {
@@ -332,7 +322,6 @@ lval* lval_eval(lenv* e, lval* v);
 lval* builtin(lval* a, char* op);
 
 lval* lval_eval_sexpr(lenv* e, lval* v) {
-
     /* Evaluate Children */
     for (int i = 0; i < v->count; i++) {
         v->cell[i] = lval_eval(e, v->cell[i]);
@@ -499,32 +488,6 @@ lval* builtin_sub(lenv* e, lval* a) { return builtin_op(e, a, "-"); }
 lval* builtin_mul(lenv* e, lval* a) { return builtin_op(e, a, "*"); }
 lval* builtin_div(lenv* e, lval* a) { return builtin_op(e, a, "/"); }
 
-void lenv_put(lenv* e, lval* k, lval*v);
-
-lval* builtin_def(lenv* e, lval* a) {
-    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "Function 'def' passed incorrect type!");
-
-    /* First arg is a symbol list*/
-    lval* syms = a->cell[0];
-
-    /* Make sure all memebers of syms is in fact a symbol */
-    for (int i = 0; i < syms->count; i++) {
-        LASSERT(a, (syms->cell[i]->type == LVAL_SYM), "Function 'def' cannot define non-symbol!");
-    }
-
-    /* Check for correct number of symbols and values */
-    LASSERT(a, (syms->count == a->count-1), "Function 'def' cannot define incorrect number of values to symbols!");
-
-    /* Assign copies to symbols */
-    for (int i = 0; i < syms->count; i++) {
-        lenv_put(e, syms->cell[i], a->cell[i+1]);
-    }
-
-    lval_del(a);
-    return lval_sexpr();
-}
-
-
 /* Declare environment struct. */
 struct lenv {
     int count;
@@ -584,6 +547,29 @@ void lenv_put(lenv* e, lval* k, lval*v) {
     strcpy(e->syms[e->count - 1], k->sym);
 }
 
+lval* builtin_def(lenv* e, lval* a) {
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "Function 'def' passed incorrect type!");
+
+    /* First arg is a symbol list*/
+    lval* syms = a->cell[0];
+
+    /* Make sure all memebers of syms is in fact a symbol */
+    for (int i = 0; i < syms->count; i++) {
+        LASSERT(a, (syms->cell[i]->type == LVAL_SYM), "Function 'def' cannot define non-symbol!");
+    }
+
+    /* Check for correct number of symbols and values */
+    LASSERT(a, (syms->count == a->count-1), "Function 'def' cannot define incorrect number of values to symbols!");
+
+    /* Assign copies to symbols */
+    for (int i = 0; i < syms->count; i++) {
+        lenv_put(e, syms->cell[i], a->cell[i+1]);
+    }
+
+    lval_del(a);
+    return lval_sexpr();
+}
+
 void lenv_add_builtin(lenv* e, char* name, lbuiltin func) {
     lval* key = lval_sym(name);
     lval* value = lval_fun(func);
@@ -609,6 +595,7 @@ void lenv_add_builtins(lenv* e) {
     lenv_add_builtin(e, "*", builtin_mul);
     lenv_add_builtin(e, "/", builtin_div);
 }
+
 
 int main(int argc, char** argv) {
 
